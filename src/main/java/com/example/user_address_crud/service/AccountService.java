@@ -7,5 +7,5 @@ public interface AccountService {
 
     AuthResponse login(AuthRequest loginRequest);
     AuthResponse register(AuthRequest registerRequest);
-//    boolean checkUsernameAvailability(String username);
+
 }

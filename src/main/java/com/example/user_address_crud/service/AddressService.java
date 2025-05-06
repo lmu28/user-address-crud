@@ -23,5 +23,5 @@ public interface AddressService {
 
     void deleteById(Long id);
 
-//    List<AddressDto> search(String searchTerm);
+    List<AddressDto> search(String searchTerm);
 }

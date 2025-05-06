@@ -1,7 +1,7 @@
 package com.example.user_address_crud.dto;
 
-import com.example.user_address_crud.dto.AddressDto;
 import com.example.user_address_crud.model.User;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,8 +9,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Data
 @NoArgsConstructor

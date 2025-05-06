@@ -24,5 +24,6 @@ public interface UserService {
 
     void deleteById(Long id);
 
-//    List<UserDto> search(String searchTerm);
+
+    List<UserDto> search(String searchTerm);
 }

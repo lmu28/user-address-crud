@@ -24,7 +24,7 @@ public class AddressDto {
     private String street;
 
     @NotBlank(message = "Номер дома обязателен")
-    private String houseNumber;
+    private String house;
 
     private String apartment;
 
@@ -35,7 +35,7 @@ public class AddressDto {
         dto.setRegion(address.getRegion());
         dto.setCity(address.getCity());
         dto.setStreet(address.getStreet());
-        dto.setHouseNumber(address.getHouseNumber());
+        dto.setHouse(address.getHouseNumber());
         dto.setApartment(address.getApartment());
         return dto;
     }
@@ -46,7 +46,7 @@ public class AddressDto {
         address.setRegion(this.region);
         address.setCity(this.city);
         address.setStreet(this.street);
-        address.setHouseNumber(this.houseNumber);
+        address.setHouseNumber(this.house);
         address.setApartment(this.apartment);
         return address;
     }

@@ -1,9 +1,9 @@
 package com.example.user_address_crud.exception;
 
-public class AuthException extends RuntimeException {
+public class FieldException extends RuntimeException {
     private String field;
 
-    public AuthException(String message, String field) {
+    public FieldException(String message, String field) {
         super(message);
         this.field = field;
     }

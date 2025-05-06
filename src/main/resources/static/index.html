@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление пользователями и адресами</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
+    <style>
+        .cursor-pointer { cursor: pointer; }
+        [v-cloak] { display: none; }
+        .error-feedback { color: #dc3545; font-size: 0.875em; margin-top: 0.25rem; }
+    </style>
+</head>
+<body>
+<div id="app" v-cloak>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Управление данными</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" @click.prevent="currentPage = 'users'" :class="{ active: currentPage === 'users' }">Пользователи</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" @click.prevent="currentPage = 'addresses'" :class="{ active: currentPage === 'addresses' }">Адреса</a>
+                    </li>
+                </ul>
+                <div class="ms-auto">
+                    <span class="text-light me-2">{{ isAuthenticated ? 'Админ' : 'Гость' }}</span>
+                    <button v-if="!isAuthenticated" @click="showRegisterModal" class="btn btn-sm btn-light me-2">Регистрация</button>
+                    <button v-if="!isAuthenticated" @click="showLoginModal" class="btn btn-sm btn-light">Войти</button>
+                    <button v-else @click="logout" class="btn btn-sm btn-light">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Страница пользователей -->
+        <div v-if="currentPage === 'users'">
+            <div class="d-flex justify-content-between mb-3">
+                <h2>Пользователи</h2>
+                <div>
+                    <div class="input-group me-2">
+                        <input type="text" v-model="userSearchText" class="form-control form-control-sm" placeholder="Поиск..." @keyup.enter="searchUsers">
+                        <button class="btn btn-outline-secondary btn-sm" @click="searchUsers">Найти</button>
+                    </div>
+                    <button v-if="isAuthenticated" @click="showUserForm()" class="btn btn-primary ms-2">Добавить</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Имя</th>
+                        <th>Фамилия</th>
+                        <th>Отчество</th>
+                        <th>Телефон</th>
+                        <th>Email</th>
+                        <th>Дата рождения</th>
+                        <th>Адрес</th>
+                        <th v-if="isAuthenticated">Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="user in filteredUsers" :key="user.id">
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.firstName }}</td>
+                        <td>{{ user.lastName || '-' }}</td>
+                        <td>{{ user.middleName || '-' }}</td>
+                        <td>{{ user.phone || '-' }}</td>
+                        <td>{{ user.email || '-' }}</td>
+                        <td>{{ formatDate(user.birthDate) }}</td>
+                        <td>{{ getUserAddress(user) }}</td>
+                        <td v-if="isAuthenticated">
+                            <button @click="editUser(user)" class="btn btn-sm btn-success me-1">Ред.</button>
+                            <button @click="deleteUser(user.id)" class="btn btn-sm btn-danger">Удал.</button>
+                        </td>
+                    </tr>
+                    <tr v-if="filteredUsers.length === 0">
+                        <td colspan="9" class="text-center">Нет данных</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Страница адресов -->
+        <div v-if="currentPage === 'addresses'">
+            <div class="d-flex justify-content-between mb-3">
+                <h2>Адреса</h2>
+                <div>
+                    <div class="input-group me-2">
+                        <input type="text" v-model="addressSearchText" class="form-control form-control-sm" placeholder="Поиск..." @keyup.enter="searchAddresses">
+                        <button class="btn btn-outline-secondary btn-sm" @click="searchAddresses">Найти</button>
+                    </div>
+                    <button v-if="isAuthenticated" @click="showAddressForm()" class="btn btn-primary ms-2">Добавить</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Область</th>
+                        <th>Город</th>
+                        <th>Улица</th>
+                        <th>Дом</th>
+                        <th>Квартира</th>
+                        <th v-if="isAuthenticated">Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="address in filteredAddresses" :key="address.id">
+                        <td>{{ address.id }}</td>
+                        <td>{{ address.region }}</td>
+                        <td>{{ address.city }}</td>
+                        <td>{{ address.street }}</td>
+                        <td>{{ address.house }}</td>
+                        <td>{{ address.apartment || '-' }}</td>
+                        <td v-if="isAuthenticated">
+                            <button @click="editAddress(address)" class="btn btn-sm btn-success me-1">Ред.</button>
+                            <button @click="deleteAddress(address.id)" class="btn btn-sm btn-danger">Удал.</button>
+                        </td>
+                    </tr>
+                    <tr v-if="filteredAddresses.length === 0">
+                        <td colspan="7" class="text-center">Нет данных</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Регистрация</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Логин*</label>
+                        <input type="text" v-model="registerForm.username" class="form-control">
+                        <div v-if="getFieldError('username')" class="text-danger small">
+                            {{ getFieldError('username') }}
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Пароль*</label>
+                        <input type="password" v-model="registerForm.password" class="form-control">
+                        <div v-if="getFieldError('password')" class="text-danger small">
+                            {{ getFieldError('password') }}
+                        </div>
+                    </div>
+
+                    <div v-if="registerError" class="alert alert-danger">
+                        {{ registerError }}
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" @click="register" class="btn btn-primary">Зарегистрироваться</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно авторизации -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Авторизация</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label class="form-label">Логин</label>
+                        <input type="text" v-model="loginForm.username" class="form-control">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Пароль</label>
+                        <input type="password" v-model="loginForm.password" class="form-control">
+                    </div>
+                    <div v-if="loginError" class="alert alert-danger">{{ loginError }}</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" @click="login" class="btn btn-primary">Войти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно пользователя -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ userForm.id ? 'Редактирование' : 'Добавление' }} пользователя</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Имя*</label>
+                            <input type="text" v-model="userForm.firstName" class="form-control" :class="{'is-invalid': userFormErrors.firstName}">
+                            <div v-if="userFormErrors.firstName" class="invalid-feedback">{{ userFormErrors.firstName }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Фамилия</label>
+                            <input type="text" v-model="userForm.lastName" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Отчество</label>
+                            <input type="text" v-model="userForm.middleName" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Телефон*</label>
+                            <input type="text" v-model="userForm.phone" class="form-control" :class="{'is-invalid': userFormErrors.phone}">
+                            <div v-if="userFormErrors.phone" class="invalid-feedback">{{ userFormErrors.phone }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email*</label>
+                            <input type="email" v-model="userForm.email" class="form-control" :class="{'is-invalid': userFormErrors.email}">
+                            <div v-if="userFormErrors.email" class="invalid-feedback">{{ userFormErrors.email }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дата рождения*</label>
+                            <input type="date" v-model="userForm.birthDate" class="form-control" :class="{'is-invalid': userFormErrors.birthDate}">
+                            <div v-if="userFormErrors.birthDate" class="invalid-feedback">{{ userFormErrors.birthDate }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Адрес</label>
+                            <select v-model="userForm.addressId" class="form-select" :class="{'is-invalid': userFormErrors.addressId}">
+                                <option :value="null">Выберите адрес</option>
+                                <option v-for="address in addresses" :key="address.id" :value="address.id">
+                                    {{ address.city }}, {{ address.street }}, {{ address.house }}{{ address.apartment ? ', кв. ' + address.apartment : '' }}
+                                </option>
+                            </select>
+                            <div v-if="userFormErrors.addressId" class="invalid-feedback">{{ userFormErrors.addressId }}</div>
+                        </div>
+                    </form>
+
+
+                    <div v-if="userError" class="alert alert-danger mt-3">
+                        {{ userError }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" @click="saveUser" class="btn btn-primary">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно адреса -->
+    <div class="modal fade" id="addressModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ addressForm.id ? 'Редактирование' : 'Добавление' }} адреса</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Область*</label>
+                            <input type="text" v-model="addressForm.region" class="form-control" :class="{'is-invalid': addressFormErrors.region}">
+                            <div v-if="addressFormErrors.region" class="invalid-feedback">{{ addressFormErrors.region }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Город*</label>
+                            <input type="text" v-model="addressForm.city" class="form-control" :class="{'is-invalid': addressFormErrors.city}">
+                            <div v-if="addressFormErrors.city" class="invalid-feedback">{{ addressFormErrors.city }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Улица*</label>
+                            <input type="text" v-model="addressForm.street" class="form-control" :class="{'is-invalid': addressFormErrors.street}">
+                            <div v-if="addressFormErrors.street" class="invalid-feedback">{{ addressFormErrors.street }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Дом*</label>
+                            <input type="text" v-model="addressForm.house" class="form-control" :class="{'is-invalid': addressFormErrors.house}">
+                            <div v-if="addressFormErrors.house" class="invalid-feedback">{{ addressFormErrors.house }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Квартира</label>
+                            <input type="text" v-model="addressForm.apartment" class="form-control">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" @click="saveAddress" class="btn btn-primary">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтверждение удаления</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>{{ confirmMessage }}</p>
+                </div>
+                <div v-if="deleteError" class="alert alert-danger mt-3">
+                    {{ deleteError }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" @click="confirmDelete" class="btn btn-danger">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

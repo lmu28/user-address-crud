@@ -23,7 +23,8 @@ CREATE TABLE users (
                        FOREIGN KEY (address_id) REFERENCES addresses (id)
 );
 
-CREATE INDEX idx_users_email ON users (email);
-CREATE INDEX idx_users_name ON users (first_name, last_name);
-CREATE INDEX idx_addresses_city ON addresses (city);
-CREATE INDEX idx_addresses_region ON addresses (region);
+CREATE INDEX idx_addresses_search ON addresses(region, city, street, house_number, apartment);
+
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_search ON users(first_name, last_name, middle_name, phone, email);
+CREATE INDEX idx_users_address_id ON users(address_id);

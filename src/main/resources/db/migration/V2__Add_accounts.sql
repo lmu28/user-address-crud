@@ -6,4 +6,4 @@ CREATE TABLE accounts (
                                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_accounts_username ON accounts (username);
+CREATE INDEX idx_accounts_username ON accounts(username);

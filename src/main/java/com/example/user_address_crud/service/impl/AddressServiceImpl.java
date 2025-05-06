@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -51,9 +52,8 @@ public class AddressServiceImpl implements AddressService {
     @Override
     @Transactional
     public Optional<AddressDto> update(Long id, AddressDto addressDto) {
-        if (!addressRepository.existsById(id)) {
-            return Optional.empty();
-        }
+        addressRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Адрес с ID " + id + " не найден"));
 
         Address address = addressDto.toAddress();
         address.setId(id);
@@ -63,7 +63,12 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id) {
+        addressRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Адрес с ID " + id + " не найден"));
+
+
         if (userRepository.existsByAddressId(id)) {
             throw new EntityInUseException("Невозможно удалить адрес, так как он используется пользователем");
         }
@@ -71,4 +76,9 @@ public class AddressServiceImpl implements AddressService {
         addressRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public List<AddressDto> search(String searchTerm) {
+        return addressRepository.searchByAllFields(searchTerm).stream().map(AddressDto::fromAddress).toList();
+    }
 }

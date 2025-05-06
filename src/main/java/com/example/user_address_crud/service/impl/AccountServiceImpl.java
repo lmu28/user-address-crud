@@ -17,6 +17,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class AccountServiceImpl implements AccountService {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
+    @Transactional
     public AuthResponse login(AuthRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -49,6 +51,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional
     public AuthResponse register(AuthRequest registerRequest) {
         if (accountRepository.existsByUsername(registerRequest.getUsername())) {
             throw new FieldException("Имя пользователя уже занято", "username");
@@ -62,11 +65,6 @@ public class AccountServiceImpl implements AccountService {
 
         return login(new AuthRequest(registerRequest.getUsername(), registerRequest.getPassword()));
     }
-
-//    @Override
-//    public boolean checkUsernameAvailability(String username) {
-//        return !accountRepository.existsByUsername(username);
-//    }
 
 
 

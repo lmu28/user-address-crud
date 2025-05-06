@@ -49,5 +49,8 @@ public class AddressController {
         return ResponseEntity.noContent().build();
     }
 
-
+    @GetMapping("/search")
+    public ResponseEntity<List<AddressDto>> searchAddresses(@RequestParam String query) {
+        return ResponseEntity.ok(addressService.search(query));
+    }
 }

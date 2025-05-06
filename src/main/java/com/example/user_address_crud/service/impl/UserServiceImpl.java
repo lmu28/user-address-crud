@@ -9,7 +9,6 @@ import com.example.user_address_crud.repository.AddressRepository;
 import com.example.user_address_crud.repository.UserRepository;
 import com.example.user_address_crud.service.UserService;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,7 +50,8 @@ public class UserServiceImpl implements UserService {
         User user = userDto.toUser();
 
         if (userDto.getAddressId() != null) {
-            Address address = addressRepository.findById(userDto.getAddressId()).get();
+            Address address = addressRepository.findById(userDto.getAddressId())
+                    .orElseThrow(() -> new EntityNotFoundException("Адрес с id " + userDto.getAddressId() + " не найден"));;
             if (address.getUser() != null) throw new FieldException("Адрес занят другим пользователем", "addressId");
             user.setAddress(address);
         }
@@ -66,6 +66,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Optional<UserDto> update(Long id, UserDto userDto) {
+        userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + id + " не найден"));
 
         if (userDto.getEmail() != null && userRepository.existsByEmailAndIdNot(userDto.getEmail(), id)) {
             throw new FieldException("Пользователь с таким email уже существует", "email");
@@ -90,7 +92,17 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    @Transactional
     public void deleteById(Long id) {
+        userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + id + " не найден"));
+
         userRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public List<UserDto> search(String searchTerm) {
+       return userRepository.searchByAllFields(searchTerm).stream().map(UserDto::fromUser).toList();
     }
 }

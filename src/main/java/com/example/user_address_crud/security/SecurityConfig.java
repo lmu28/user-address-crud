@@ -3,14 +3,12 @@ package com.example.user_address_crud.security;
 
 import com.example.user_address_crud.service.impl.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -61,16 +59,12 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests()
-                // Доступ без авторизации для GET-запросов на /api/**
                 .requestMatchers(new AntPathRequestMatcher("/**", HttpMethod.GET.name())).permitAll()
-
-                // Доступ без авторизации для POST-запросов на /login и /register
                 .requestMatchers(
                         new AntPathRequestMatcher("/api/auth/login", "POST"),
                         new AntPathRequestMatcher("/api/auth/register", "POST")
                 ).permitAll()
 
-                // Остальные запросы требуют авторизации
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);

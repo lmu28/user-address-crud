@@ -13,4 +13,11 @@ import java.util.List;
 public interface AddressRepository extends JpaRepository<Address, Long> {
 
 
+    @Query("SELECT a FROM Address a WHERE " +
+            "LOWER(a.region) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+            "LOWER(a.city) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+            "LOWER(a.street) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+            "LOWER(a.houseNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+            "LOWER(a.apartment) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+    List<Address> searchByAllFields(@Param("searchTerm") String searchTerm);
 }

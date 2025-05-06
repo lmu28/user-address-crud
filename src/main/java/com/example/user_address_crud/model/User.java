@@ -3,12 +3,9 @@ package com.example.user_address_crud.model;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
-import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.Objects;
 
 @Entity
 @Table(name = "users")
@@ -41,8 +38,8 @@ public class User {
     @Column(nullable = false)
     private LocalDate birthDate;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "address_id")
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "address_id", unique = true)
     private Address address;
 
 
