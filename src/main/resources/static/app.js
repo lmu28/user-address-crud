@@ -30,8 +30,9 @@ const app = Vue.createApp({
             registerError: '',
 
             users: [],
-            addresses: [],           // Все адреса (полный список)
-            displayAddresses: [],    // Отображаемые адреса (могут быть отфильтрованы)
+            addresses: [],
+            displayAddresses: [],
+
 
             userSearch: '',
             userSearchText: '',
@@ -356,6 +357,7 @@ const app = Vue.createApp({
             this.deleteType = 'user';
             this.deleteId = id;
             this.confirmMessage = 'Вы действительно хотите удалить пользователя?';
+            this.deleteError = '';
             confirmModal.show();
         },
 
@@ -363,8 +365,8 @@ const app = Vue.createApp({
             fetch(API.ADDRESSES)
                 .then(response => response.json())
                 .then(data => {
-                    this.addresses = data;       // Сохраняем полный список адресов
-                    this.displayAddresses = data.slice(); // Создаем копию для отображения
+                    this.addresses = data;
+                    this.displayAddresses = data.slice();
                 })
                 .catch(error => console.error('Ошибка загрузки адресов:', error));
         },
@@ -373,14 +375,14 @@ const app = Vue.createApp({
             this.addressSearch = this.addressSearchText;
 
             if (!this.addressSearch.trim()) {
-                this.displayAddresses = this.addresses.slice(); // Восстанавливаем полный список для отображения
+                this.displayAddresses = this.addresses.slice();
                 return;
             }
 
             fetch(`${API.ADDRESSES}/search?query=${encodeURIComponent(this.addressSearch)}`)
                 .then(response => response.json())
                 .then(data => {
-                    this.displayAddresses = data; // Обновляем только отображаемый список
+                    this.displayAddresses = data;
                 })
                 .catch(error => console.error('Ошибка поиска адресов:', error));
         },
@@ -430,7 +432,7 @@ const app = Vue.createApp({
 
             const addressToSend = { ...this.addressForm };
 
-            // Преобразуем пустые строки в null
+
             Object.keys(addressToSend).forEach(key => {
                 if (addressToSend[key] === '') {
                     addressToSend[key] = null;
@@ -460,7 +462,7 @@ const app = Vue.createApp({
                 .then(data => {
                     this.isEditingAddress = false;
                     addressModal.hide();
-                    this.loadAddresses(); // Перезагружаем оба списка адресов
+                    this.loadAddresses();
                 })
                 .catch(errors => {
                     if (errors.fieldErrors) {
@@ -478,10 +480,10 @@ const app = Vue.createApp({
         },
 
         deleteAddress(id) {
-            this.deleteError = null;
             this.deleteType = 'address';
             this.deleteId = id;
             this.confirmMessage = 'Вы действительно хотите удалить адрес?';
+            this.deleteError = '';
             confirmModal.show();
         },
 
@@ -503,9 +505,14 @@ const app = Vue.createApp({
                         } else {
                             this.loadAddresses();
                         }
+                        this.deleteError = '';
                         confirmModal.hide();
                     } else if (response.status === 409) {
-                        this.deleteError = 'Невозможно удалить адрес, так как он используется пользователями';
+                        if (this.deleteType === 'address') {
+                            this.deleteError = 'Невозможно удалить адрес, так как он используется пользователями';
+                        } else {
+                            this.deleteError = 'Невозможно удалить пользователя';
+                        }
                     } else {
                         this.deleteError = 'Ошибка при удалении';
                     }
