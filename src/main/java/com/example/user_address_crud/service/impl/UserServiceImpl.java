@@ -9,6 +9,8 @@ import com.example.user_address_crud.repository.AddressRepository;
 import com.example.user_address_crud.repository.UserRepository;
 import com.example.user_address_crud.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
 
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
@@ -43,6 +48,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto save(UserDto userDto) {
+        log.info("Создание нового пользователя с email: {}", userDto.getEmail());
         if (userDto.getEmail() != null && userRepository.existsByEmail(userDto.getEmail())) {
             throw new FieldException("Пользователь с таким email уже существует","email");
         }
@@ -57,6 +63,7 @@ public class UserServiceImpl implements UserService {
         }
 
         user = userRepository.save(user);
+        log.info("Создан пользователь с ID: {}", user.getId());
         return UserDto.fromUser(user);
     }
 
@@ -66,6 +73,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Optional<UserDto> update(Long id, UserDto userDto) {
+        log.info("Обновление пользователя с ID: {}", id);
         userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + id + " не найден"));
 
@@ -94,6 +102,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteById(Long id) {
+        log.info("Удаление пользователя с ID: {}", id);
         userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + id + " не найден"));
 

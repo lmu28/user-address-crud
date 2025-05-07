@@ -6,7 +6,7 @@
 
 - **Back-end**: Java 17, Spring MVC, Spring Data JPA, Spring Security
 - **Front-end**: Vue.js (SPA), REST API
-- **База данных**: HSQLDB (в памяти)
+- **База данных**: HSQLDB 
 - **Миграции БД**: Flyway
 - **Сборка**: Maven
 

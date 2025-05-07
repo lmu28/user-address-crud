@@ -1,6 +1,8 @@
 package com.example.user_address_crud.security;
 
 import io.jsonwebtoken.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -15,6 +17,10 @@ import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
+    private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
+
+
+
     @Value("${app.jwt.secret:defaultSecretKey}")
     private String jwtSecret;
 
@@ -22,6 +28,7 @@ public class JwtTokenProvider {
     private int jwtExpirationInMs;
 
     public String generateToken(String username) {
+        log.debug("Генерация JWT токена для пользователя: {}", username);
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
@@ -49,6 +56,7 @@ public class JwtTokenProvider {
             Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
             return true;
         } catch (Exception e) {
+            log.warn("Ошибка валидации токена: {}", e.getMessage());
             return false;
         }
     }

@@ -15,14 +15,12 @@ const app = Vue.createApp({
         return {
             currentPage: 'users',
 
-
             isAuthenticated: false,
             loginForm: {
                 username: '',
                 password: ''
             },
             loginError: '',
-
 
             registerForm: {
                 username: '',
@@ -31,16 +29,14 @@ const app = Vue.createApp({
             registerFieldErrors: [],
             registerError: '',
 
-
             users: [],
-            addresses: [],
-
+            addresses: [],           // Все адреса (полный список)
+            displayAddresses: [],    // Отображаемые адреса (могут быть отфильтрованы)
 
             userSearch: '',
             userSearchText: '',
             addressSearch: '',
             addressSearchText: '',
-
 
             userForm: {
                 id: null,
@@ -89,10 +85,10 @@ const app = Vue.createApp({
         },
 
         filteredAddresses() {
-            if (!this.addressSearch) return this.addresses;
+            if (!this.addressSearch) return this.displayAddresses;
 
             const search = this.addressSearch.toLowerCase();
-            return this.addresses.filter(address =>
+            return this.displayAddresses.filter(address =>
                 (address.region && address.region.toLowerCase().includes(search)) ||
                 (address.city && address.city.toLowerCase().includes(search)) ||
                 (address.street && address.street.toLowerCase().includes(search)) ||
@@ -117,13 +113,11 @@ const app = Vue.createApp({
     },
 
     methods: {
-
         formatDate(dateString) {
             if (!dateString) return '-';
             const date = new Date(dateString);
             return date.toLocaleDateString('ru-RU');
         },
-
 
         getUserAddress(user) {
             if (user.addressId === null || user.addressId === undefined) return 'Не указан';
@@ -229,7 +223,6 @@ const app = Vue.createApp({
             this.isAuthenticated = false;
         },
 
-
         loadUsers() {
             fetch(API.USERS)
                 .then(response => response.json())
@@ -310,7 +303,6 @@ const app = Vue.createApp({
 
             const userToSend = { ...this.userForm };
 
-
             Object.keys(userToSend).forEach(key => {
                 if (userToSend[key] === '') {
                     userToSend[key] = null;
@@ -367,12 +359,12 @@ const app = Vue.createApp({
             confirmModal.show();
         },
 
-
         loadAddresses() {
             fetch(API.ADDRESSES)
                 .then(response => response.json())
                 .then(data => {
-                    this.addresses = data;
+                    this.addresses = data;       // Сохраняем полный список адресов
+                    this.displayAddresses = data.slice(); // Создаем копию для отображения
                 })
                 .catch(error => console.error('Ошибка загрузки адресов:', error));
         },
@@ -381,14 +373,14 @@ const app = Vue.createApp({
             this.addressSearch = this.addressSearchText;
 
             if (!this.addressSearch.trim()) {
-                this.loadAddresses();
+                this.displayAddresses = this.addresses.slice(); // Восстанавливаем полный список для отображения
                 return;
             }
 
             fetch(`${API.ADDRESSES}/search?query=${encodeURIComponent(this.addressSearch)}`)
                 .then(response => response.json())
                 .then(data => {
-                    this.addresses = data;
+                    this.displayAddresses = data; // Обновляем только отображаемый список
                 })
                 .catch(error => console.error('Ошибка поиска адресов:', error));
         },
@@ -468,7 +460,7 @@ const app = Vue.createApp({
                 .then(data => {
                     this.isEditingAddress = false;
                     addressModal.hide();
-                    this.loadAddresses();
+                    this.loadAddresses(); // Перезагружаем оба списка адресов
                 })
                 .catch(errors => {
                     if (errors.fieldErrors) {
@@ -493,10 +485,7 @@ const app = Vue.createApp({
             confirmModal.show();
         },
 
-
         confirmDelete() {
-
-
             const url = this.deleteType === 'user'
                 ? `${API.USERS}/${this.deleteId}`
                 : `${API.ADDRESSES}/${this.deleteId}`;

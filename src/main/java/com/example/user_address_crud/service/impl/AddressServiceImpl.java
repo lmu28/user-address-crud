@@ -9,6 +9,8 @@ import com.example.user_address_crud.repository.UserRepository;
 import com.example.user_address_crud.service.AddressService;
 import lombok.RequiredArgsConstructor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AddressServiceImpl implements AddressService {
+
+    private static final Logger log = LoggerFactory.getLogger(AddressServiceImpl.class);
+
 
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
@@ -44,14 +49,17 @@ public class AddressServiceImpl implements AddressService {
     @Override
     @Transactional
     public AddressDto save(AddressDto addressDto) {
+        log.info("Создание нового адреса");
         Address address = addressDto.toAddress();
         address = addressRepository.save(address);
+        log.info("Создан адрес с ID: {}", address.getId());
         return AddressDto.fromAddress(address);
     }
 
     @Override
     @Transactional
     public Optional<AddressDto> update(Long id, AddressDto addressDto) {
+        log.info("Обновление адреса с ID: {}", id);
         addressRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Адрес с ID " + id + " не найден"));
 
@@ -65,6 +73,7 @@ public class AddressServiceImpl implements AddressService {
     @Override
     @Transactional
     public void deleteById(Long id) {
+        log.info("Удаление адреса с ID: {}", id);
         addressRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Адрес с ID " + id + " не найден"));
 
